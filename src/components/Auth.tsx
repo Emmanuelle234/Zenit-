@@ -128,34 +128,34 @@ export const LoginView: React.FC = () => {
         
         <div className="relative z-10 flex items-center gap-4">
           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-2xl shadow-black/10">
-            <Shield className="text-blue-600 w-7 h-7" />
+            <Shield className="text-brand-primary w-7 h-7" />
           </div>
-          <span className="text-3xl font-black tracking-tighter">Zenith</span>
+          <span className="text-3xl font-black tracking-tighter">GND Crypt</span>
         </div>
 
         <div className="relative z-10 max-w-xl">
           <h1 className="text-7xl font-black leading-[0.95] tracking-tighter mb-8">
-            The future of <span className="text-blue-200">wealth</span> is here.
+            The future of <span className="text-brand-secondary">wealth</span> is here.
           </h1>
-          <p className="text-xl text-blue-100 leading-relaxed mb-14 font-medium opacity-90">
+          <p className="text-xl text-white/80 leading-relaxed mb-14 font-medium max-w-lg">
             Join over 50,000 users building their financial legacy with automated savings, smart investments, and institutional-grade security.
           </p>
           
           <div className="grid grid-cols-2 gap-12">
             <div className="space-y-3">
-              <h4 className="font-black text-4xl tracking-tighter">$2.4B+</h4>
-              <p className="text-[10px] text-blue-200 uppercase tracking-[0.2em] font-black opacity-80">Assets Managed</p>
+              <h4 className="font-black text-4xl tracking-tighter">₦2.4B+</h4>
+              <p className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-black">Assets Managed</p>
             </div>
             <div className="space-y-3">
               <h4 className="font-black text-4xl tracking-tighter">99.9%</h4>
-              <p className="text-[10px] text-blue-200 uppercase tracking-[0.2em] font-black opacity-80">Uptime Guarantee</p>
+              <p className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-black">Uptime Guarantee</p>
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-8 text-xs text-blue-200 font-black uppercase tracking-widest opacity-60">
+        <div className="relative z-10 flex items-center gap-8 text-xs text-white/40 font-black uppercase tracking-widest">
           <span>Trusted by industry leaders</span>
-          <div className="flex gap-6 grayscale brightness-200 opacity-40">
+          <div className="flex gap-6 grayscale brightness-200 opacity-20">
             <div className="w-10 h-10 bg-white/20 rounded-xl"></div>
             <div className="w-10 h-10 bg-white/20 rounded-xl"></div>
             <div className="w-10 h-10 bg-white/20 rounded-xl"></div>

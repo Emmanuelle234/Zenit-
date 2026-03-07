@@ -19,7 +19,7 @@ import {
   Search, 
   ArrowUpRight, 
   ArrowDownLeft,
-  DollarSign,
+  Coins,
   Activity,
   Loader2
 } from 'lucide-react';
@@ -66,9 +66,9 @@ export const Investments: React.FC = () => {
       return;
     }
 
-    const existingInv = investments.find(inv => inv.assetSymbol === asset.symbol);
-    if (!isBuy && (!existingInv || existingInv.shares < shares)) {
-      alert('Insufficient shares');
+    const existingInv = investments.find(inv => inv.assetId === asset.symbol);
+    if (!isBuy && (!existingInv || existingInv.amount < shares)) {
+      // Handle insufficient shares (maybe with a toast later)
       return;
     }
 
@@ -86,37 +86,36 @@ export const Investments: React.FC = () => {
 
     if (isBuy) {
       if (existingInv) {
-        const newTotalShares = existingInv.shares + shares;
-        const newAvgPrice = ((existingInv.shares * existingInv.averagePrice) + totalCost) / newTotalShares;
+        const newTotalAmount = existingInv.amount + shares;
+        const newAvgPrice = ((existingInv.amount * existingInv.purchasePrice) + totalCost) / newTotalAmount;
         batch.update(invRef, {
-          shares: newTotalShares,
-          averagePrice: newAvgPrice,
+          amount: newTotalAmount,
+          purchasePrice: newAvgPrice,
           currentPrice: asset.price,
-          lastUpdated: new Date().toISOString()
+          timestamp: new Date().toISOString()
         });
       } else {
         const newInv: Investment = {
           id: invId,
           userId: profile.uid,
+          assetId: asset.symbol,
           assetName: asset.name,
-          assetSymbol: asset.symbol,
-          type: asset.type,
-          shares: shares,
-          averagePrice: asset.price,
+          amount: shares,
+          purchasePrice: asset.price,
           currentPrice: asset.price,
-          lastUpdated: new Date().toISOString()
+          timestamp: new Date().toISOString()
         };
         batch.set(invRef, newInv);
       }
     } else {
-      const newShares = existingInv!.shares - shares;
-      if (newShares === 0) {
+      const newAmount = existingInv!.amount - shares;
+      if (newAmount === 0) {
         batch.delete(invRef);
       } else {
         batch.update(invRef, {
-          shares: newShares,
+          amount: newAmount,
           currentPrice: asset.price,
-          lastUpdated: new Date().toISOString()
+          timestamp: new Date().toISOString()
         });
       }
     }
@@ -129,7 +128,7 @@ export const Investments: React.FC = () => {
       amount: totalCost,
       description: `${isBuy ? 'Bought' : 'Sold'} ${shares} ${asset.symbol}`,
       timestamp: new Date().toISOString(),
-      status: 'completed'
+      status: 'success'
     };
     batch.set(txRef, tx);
 
@@ -144,8 +143,8 @@ export const Investments: React.FC = () => {
     }
   };
 
-  const totalPortfolioValue = investments.reduce((acc, inv) => acc + ((inv.shares ?? 0) * (inv.currentPrice ?? 0)), 0);
-  const totalGainLoss = investments.reduce((acc, inv) => acc + ((inv.shares ?? 0) * ((inv.currentPrice ?? 0) - (inv.averagePrice ?? 0))), 0);
+  const totalPortfolioValue = investments.reduce((acc, inv) => acc + (inv.amount * inv.currentPrice), 0);
+  const totalGainLoss = investments.reduce((acc, inv) => acc + (inv.amount * (inv.currentPrice - inv.purchasePrice)), 0);
 
   const filteredMarket = MOCK_MARKET.filter(asset => 
     asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -155,46 +154,46 @@ export const Investments: React.FC = () => {
   return (
     <div className="space-y-12 pb-20">
       {/* Premium Portfolio Header */}
-      <div className="bg-blue-600 rounded-[3rem] p-12 md:p-16 text-white relative overflow-hidden shadow-2xl shadow-blue-600/30">
+      <div className="bg-brand-primary rounded-[2.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-2xl shadow-brand-primary/20">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-[100px]"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full -ml-32 -mb-32 blur-[80px]"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-secondary/20 rounded-full -ml-32 -mb-32 blur-[80px]"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="space-y-6 text-center md:text-left">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter">Investments</h1>
-            <p className="text-blue-100 text-xl font-medium max-w-lg opacity-90 leading-relaxed">
+          <div className="space-y-4 text-center md:text-left">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter">Investments</h1>
+            <p className="text-white/80 text-lg font-medium max-w-lg leading-relaxed">
               Diversify your wealth with global assets. Track performance and trade in real-time.
             </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-2xl px-10 py-8 rounded-[2.5rem] border border-white/20 flex items-center gap-12 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-2xl px-8 py-6 rounded-[2rem] border border-white/20 flex items-center gap-8 shadow-2xl">
             <div>
-              <p className="text-[10px] text-blue-200 uppercase font-black tracking-[0.2em] mb-2">Portfolio Value</p>
-              <p className="text-4xl font-black tracking-tighter">${(totalPortfolioValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-[10px] text-white/60 uppercase font-black tracking-[0.2em] mb-1">Portfolio</p>
+              <p className="text-3xl font-black tracking-tighter">₦{(totalPortfolioValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
             </div>
-            <div className="w-px h-16 bg-white/10"></div>
+            <div className="w-px h-12 bg-white/10"></div>
             <div>
-              <p className="text-[10px] text-blue-200 uppercase font-black tracking-[0.2em] mb-2">Total Return</p>
-              <p className={`text-4xl font-black tracking-tighter ${totalGainLoss >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {totalGainLoss >= 0 ? '+' : ''}${(totalGainLoss ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              <p className="text-[10px] text-white/60 uppercase font-black tracking-[0.2em] mb-1">Return</p>
+              <p className={`text-3xl font-black tracking-tighter ${totalGainLoss >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {totalGainLoss >= 0 ? '+' : ''}₦{(totalGainLoss ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Market List */}
-        <div className="lg:col-span-2 space-y-12">
-          <div className="bg-white rounded-[3rem] border-2 border-gray-50 shadow-sm overflow-hidden">
-            <div className="p-10 border-b-2 border-gray-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <h4 className="text-2xl font-black text-gray-900 tracking-tighter">Market Overview</h4>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white rounded-[2.5rem] border border-black/[0.02] shadow-sm overflow-hidden">
+            <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <h4 className="text-xl font-black text-gray-900 tracking-tighter">Market Overview</h4>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                 <input 
                   type="text" 
                   placeholder="Search assets..." 
-                  className="w-full pl-14 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl text-xs font-bold focus:bg-white focus:border-brand-primary outline-none transition-all"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -204,39 +203,39 @@ export const Investments: React.FC = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
-                    <th className="px-10 py-6">Asset</th>
-                    <th className="px-10 py-6 text-right">Price</th>
-                    <th className="px-10 py-6 text-right">24h Change</th>
-                    <th className="px-10 py-6 text-right">Action</th>
+                    <th className="px-8 py-4">Asset</th>
+                    <th className="px-8 py-4 text-right">Price</th>
+                    <th className="px-8 py-4 text-right">24h Change</th>
+                    <th className="px-8 py-4 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y-2 divide-gray-50">
+                <tbody className="divide-y border-t border-gray-50">
                   {filteredMarket.map((asset) => (
                     <tr key={asset.symbol} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="px-10 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center font-black text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all group-hover:scale-110">
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center font-black text-gray-400 group-hover:bg-brand-primary group-hover:text-white transition-all group-hover:scale-110">
                             {asset.symbol[0]}
                           </div>
                           <div>
-                            <p className="text-base font-black text-gray-900 tracking-tight">{asset.symbol}</p>
-                            <p className="text-xs text-gray-400 font-bold">{asset.name}</p>
+                            <p className="text-sm font-black text-gray-900 tracking-tight">{asset.symbol}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{asset.name}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-10 py-6 text-right font-black text-gray-900 text-lg tracking-tight">
-                        ${(asset.price ?? 0).toLocaleString()}
+                      <td className="px-8 py-4 text-right font-black text-gray-900 text-base tracking-tight">
+                        ₦{(asset.price ?? 0).toLocaleString()}
                       </td>
-                      <td className={`px-10 py-6 text-right font-black ${asset.change24h >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                        <div className="flex items-center justify-end gap-1">
-                          {asset.change24h >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                      <td className={`px-8 py-4 text-right font-black ${asset.change24h >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <div className="flex items-center justify-end gap-1 text-sm">
+                          {asset.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                           {asset.change24h}%
                         </div>
                       </td>
-                      <td className="px-10 py-6 text-right">
+                      <td className="px-8 py-4 text-right">
                         <button 
                           onClick={() => setSelectedAsset(asset)}
-                          className="px-8 py-3 bg-blue-50 text-blue-600 rounded-2xl font-black text-sm hover:bg-blue-600 hover:text-white transition-all active:scale-95"
+                          className="px-6 py-2 bg-gray-50 text-brand-primary rounded-xl font-bold text-xs hover:bg-brand-primary hover:text-white transition-all active:scale-95"
                         >
                           Trade
                         </button>
@@ -249,31 +248,31 @@ export const Investments: React.FC = () => {
           </div>
 
           {/* Holdings */}
-          <div className="bg-white rounded-[3rem] border-2 border-gray-50 shadow-sm overflow-hidden">
-            <div className="p-10 border-b-2 border-gray-50">
-              <h4 className="text-2xl font-black text-gray-900 tracking-tighter">Your Holdings</h4>
+          <div className="bg-white rounded-[2.5rem] border border-black/[0.02] shadow-sm overflow-hidden">
+            <div className="p-8 border-b border-gray-50">
+              <h4 className="text-xl font-black text-gray-900 tracking-tighter">Your Holdings</h4>
             </div>
-            <div className="divide-y-2 divide-gray-50">
+            <div className="divide-y border-t border-gray-50">
               {investments.length > 0 ? (
                 investments.map((inv) => {
-                  const currentValue = inv.shares * inv.currentPrice;
-                  const gainLoss = currentValue - (inv.shares * inv.averagePrice);
-                  const gainLossPercent = (gainLoss / (inv.shares * inv.averagePrice)) * 100;
+                  const currentValue = inv.amount * inv.currentPrice;
+                  const gainLoss = currentValue - (inv.amount * inv.purchasePrice);
+                  const gainLossPercent = (gainLoss / (inv.amount * inv.purchasePrice)) * 100;
                   
                   return (
-                    <div key={inv.id} className="p-10 flex items-center justify-between hover:bg-gray-50/50 transition-colors group">
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center font-black text-blue-600 group-hover:scale-110 transition-transform">
-                          {inv.assetSymbol[0]}
+                    <div key={inv.id} className="p-8 flex items-center justify-between hover:bg-gray-50/50 transition-colors group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center font-black text-brand-primary group-hover:scale-110 transition-transform">
+                          {inv.assetId[0]}
                         </div>
                         <div>
-                          <p className="text-xl font-black text-gray-900 tracking-tight">{inv.assetSymbol}</p>
-                          <p className="text-xs text-gray-400 font-bold">{inv.shares} shares @ ${inv.averagePrice.toFixed(2)}</p>
+                          <p className="text-lg font-black text-gray-900 tracking-tight">{inv.assetId}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{inv.amount} units @ ₦{inv.purchasePrice.toFixed(2)}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-black text-gray-900 tracking-tighter">${(currentValue ?? 0).toLocaleString()}</p>
-                        <p className={`text-sm font-black ${gainLoss >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <p className="text-xl font-black text-gray-900 tracking-tighter">₦{(currentValue ?? 0).toLocaleString()}</p>
+                        <p className={`text-xs font-black ${gainLoss >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                           {gainLoss >= 0 ? '+' : ''}{gainLossPercent.toFixed(2)}%
                         </p>
                       </div>
@@ -281,11 +280,11 @@ export const Investments: React.FC = () => {
                   );
                 })
               ) : (
-                <div className="p-20 text-center space-y-4">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
-                    <Activity className="text-gray-200 w-10 h-10" />
+                <div className="p-16 text-center space-y-4">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
+                    <Activity className="text-gray-200 w-8 h-8" />
                   </div>
-                  <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No investments yet</p>
+                  <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">No investments yet</p>
                 </div>
               )}
             </div>
@@ -294,61 +293,61 @@ export const Investments: React.FC = () => {
 
         {/* Trade Panel */}
         <div className="space-y-8">
-          <div className="bg-white p-12 rounded-[3rem] border-2 border-gray-50 shadow-sm sticky top-28 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+          <div className="bg-white p-10 rounded-[2.5rem] border border-black/[0.02] shadow-sm sticky top-28 overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
             
-            <h4 className="text-2xl font-black text-gray-900 mb-10 tracking-tighter">Quick Trade</h4>
+            <h4 className="text-xl font-black text-gray-900 mb-8 tracking-tighter">Quick Trade</h4>
             
             {selectedAsset ? (
-              <div className="space-y-10">
-                <div className="flex items-center justify-between p-8 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-blue-100 transition-all">
+              <div className="space-y-8">
+                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-transparent hover:border-brand-primary/10 transition-all">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Asset</p>
-                    <p className="text-xl font-black text-gray-900 tracking-tight">{selectedAsset.symbol}</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Asset</p>
+                    <p className="text-lg font-black text-gray-900 tracking-tight">{selectedAsset.symbol}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-2">Price</p>
-                    <p className="text-xl font-black text-blue-600 tracking-tight">${(selectedAsset.price ?? 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Price</p>
+                    <p className="text-lg font-black text-brand-primary tracking-tight">₦{(selectedAsset.price ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Amount of Shares</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Amount to Trade</label>
                   <div className="relative">
-                    <Activity className="absolute left-8 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-300" />
+                    <Activity className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                     <input 
                       type="number" 
                       placeholder="0.00"
-                      className="w-full pl-16 pr-8 py-6 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-blue-600 rounded-[2rem] text-3xl font-black outline-none transition-all"
+                      className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-brand-primary rounded-2xl text-2xl font-black outline-none transition-all"
                       value={sharesToBuy || ''}
                       onChange={e => setSharesToBuy(Number(e.target.value))}
                     />
                   </div>
                 </div>
 
-                <div className="p-8 bg-gray-50 rounded-[2rem] space-y-4">
+                <div className="p-6 bg-gray-50 rounded-2xl space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Estimated Cost</span>
-                    <span className="text-xl font-black text-gray-900 tracking-tight">${((sharesToBuy ?? 0) * (selectedAsset?.price ?? 0)).toLocaleString()}</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Est. Cost</span>
+                    <span className="text-lg font-black text-gray-900 tracking-tight">₦{((sharesToBuy ?? 0) * (selectedAsset?.price ?? 0)).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Available</span>
-                    <span className="text-lg font-black text-emerald-600 tracking-tight">${(profile?.balance ?? 0).toLocaleString()}</span>
+                    <span className="text-base font-black text-emerald-600 tracking-tight">₦{(profile?.balance ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4">
                   <button 
                     onClick={() => handleTrade(selectedAsset, sharesToBuy, true)}
                     disabled={isSubmitting || sharesToBuy <= 0}
-                    className="bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-2xl shadow-blue-600/30"
+                    className="bg-brand-primary text-white py-5 rounded-2xl font-bold text-lg hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl shadow-brand-primary/20"
                   >
-                    {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Buy'}
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Buy'}
                   </button>
                   <button 
                     onClick={() => handleTrade(selectedAsset, sharesToBuy, false)}
                     disabled={isSubmitting || sharesToBuy <= 0}
-                    className="bg-white border-2 border-gray-100 text-gray-900 py-6 rounded-[2rem] font-black text-xl hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                    className="bg-white border-2 border-gray-100 text-gray-900 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                   >
                     Sell
                   </button>
@@ -356,15 +355,15 @@ export const Investments: React.FC = () => {
                 
                 <button 
                   onClick={() => setSelectedAsset(null)}
-                  className="w-full text-xs font-black text-gray-400 hover:text-gray-900 uppercase tracking-widest transition-colors"
+                  className="w-full text-[10px] font-black text-gray-400 hover:text-gray-900 uppercase tracking-widest transition-colors"
                 >
                   Cancel Trade
                 </button>
               </div>
             ) : (
-              <div className="text-center py-24 space-y-8">
-                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
-                  <DollarSign className="text-gray-200 w-12 h-12" />
+              <div className="text-center py-16 space-y-6">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
+                  <Coins className="text-gray-200 w-8 h-8" />
                 </div>
                 <p className="text-gray-300 font-black uppercase tracking-[0.2em] text-[10px]">Select an asset to trade</p>
               </div>

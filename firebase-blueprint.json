@@ -1,23 +1,39 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "UserProfile",
-      "description": "Stores user account information and financial balance.",
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile information, balance, and role.",
       "type": "object",
       "properties": {
         "uid": { "type": "string", "description": "Unique identifier for the user." },
-        "email": { "type": "string", "format": "email", "description": "User's email address." },
         "displayName": { "type": "string", "description": "User's full name." },
+        "email": { "type": "string", "format": "email", "description": "User's email address." },
         "photoURL": { "type": "string", "description": "URL to user's profile picture." },
-        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role in the system." },
-        "balance": { "type": "number", "description": "Current account balance." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp." }
+        "balance": { "type": "number", "description": "Current account balance in Naira." },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "User's role in the platform." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp." },
+        "lastLogin": { "type": "string", "format": "date-time", "description": "Last login timestamp." }
       },
-      "required": ["uid", "email", "displayName", "role", "balance", "createdAt"]
+      "required": ["uid", "email", "balance", "role"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Records financial activities like deposits, withdrawals, and interest payouts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "investment_buy", "investment_sell", "interest_payout"] },
+        "description": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "success", "failed"] }
+      },
+      "required": ["userId", "amount", "type", "timestamp", "status"]
     },
     "SavingsGoal": {
-      "title": "SavingsGoal",
-      "description": "A financial goal set by a user.",
+      "title": "Savings Goal",
+      "description": "User-defined savings targets.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -25,82 +41,45 @@
         "name": { "type": "string" },
         "targetAmount": { "type": "number" },
         "currentAmount": { "type": "number" },
-        "deadline": { "type": "string", "format": "date-time" },
-        "category": { "type": "string", "enum": ["travel", "emergency", "education", "home", "other"] },
+        "deadline": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "name", "targetAmount", "currentAmount", "deadline", "category", "createdAt"]
+      "required": ["userId", "name", "targetAmount", "currentAmount", "deadline"]
     },
     "Investment": {
-      "title": "Investment",
-      "description": "An asset held by a user in their portfolio.",
+      "title": "Investment Holding",
+      "description": "Tracks a user's specific asset holdings.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
+        "assetId": { "type": "string" },
         "assetName": { "type": "string" },
-        "assetSymbol": { "type": "string" },
-        "type": { "type": "string", "enum": ["stock", "crypto", "bond"] },
-        "shares": { "type": "number" },
-        "averagePrice": { "type": "number" },
-        "currentPrice": { "type": "number" },
-        "lastUpdated": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "assetName", "assetSymbol", "type", "shares", "averagePrice", "currentPrice", "lastUpdated"]
-    },
-    "Transaction": {
-      "title": "Transaction",
-      "description": "A financial record of money movement.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "type": { "type": "string", "enum": ["deposit", "withdrawal", "investment_buy", "investment_sell", "savings_transfer"] },
         "amount": { "type": "number" },
-        "description": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["completed", "pending", "failed"] }
+        "purchasePrice": { "type": "number" },
+        "currentPrice": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "type", "amount", "description", "timestamp", "status"]
-    },
-    "BankDetails": {
-      "title": "BankDetails",
-      "description": "User's linked bank account information.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "bankName": { "type": "string" },
-        "accountName": { "type": "string" },
-        "accountNumber": { "type": "string" },
-        "routingNumber": { "type": "string" },
-        "swiftCode": { "type": "string" },
-        "isDefault": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "bankName", "accountName", "accountNumber", "isDefault", "createdAt"]
+      "required": ["userId", "assetId", "amount", "purchasePrice"]
     }
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": "UserProfile",
-      "description": "Collection of user profile documents."
+      "schema": "User",
+      "description": "Individual user profiles."
     },
-    "/savings_goals/{goalId}": {
-      "schema": "SavingsGoal",
-      "description": "Collection of savings goals for all users."
-    },
-    "/investments/{investmentId}": {
-      "schema": "Investment",
-      "description": "Collection of investment holdings."
-    },
-    "/transactions/{transactionId}": {
+    "/transactions": {
       "schema": "Transaction",
-      "description": "Collection of financial transactions."
+      "description": "Global transaction log (filtered by userId in app)."
     },
-    "/bank_details/{bankId}": {
-      "schema": "BankDetails",
-      "description": "Collection of user bank details."
+    "/savings_goals": {
+      "schema": "SavingsGoal",
+      "description": "User savings goals."
+    },
+    "/investments": {
+      "schema": "Investment",
+      "description": "User investment holdings."
     }
   }
 }

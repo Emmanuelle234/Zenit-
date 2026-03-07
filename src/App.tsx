@@ -14,10 +14,10 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
+      <div className="min-h-screen flex items-center justify-center bg-bg-main">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto" />
-          <p className="text-gray-500 font-medium">Initializing Zenith Finance...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-brand-primary mx-auto" />
+          <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Initializing GND Crypt...</p>
         </div>
       </div>
     );

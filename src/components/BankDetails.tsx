@@ -22,7 +22,7 @@ import {
   Loader2,
   AlertCircle,
   ArrowUpRight,
-  DollarSign,
+  Coins,
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -327,7 +327,7 @@ export const BankDetails: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-4">Amount to Withdraw</label>
                     <div className="relative">
-                      <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-300" />
+                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-gray-300">₦</div>
                       <input 
                         required
                         type="number"
@@ -344,11 +344,11 @@ export const BankDetails: React.FC = () => {
                   <div className="p-6 bg-gray-50 rounded-[1.5rem] space-y-3">
                     <div className="flex justify-between text-sm font-bold">
                       <span className="text-gray-400 uppercase tracking-widest">Available Balance</span>
-                      <span className="text-gray-900">${(profile?.balance ?? 0).toLocaleString()}</span>
+                      <span className="text-gray-900">₦{(profile?.balance ?? 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm font-bold">
                       <span className="text-gray-400 uppercase tracking-widest">Remaining</span>
-                      <span className="text-emerald-600">${((profile?.balance || 0) - withdrawAmount).toLocaleString()}</span>
+                      <span className="text-emerald-600">₦{((profile?.balance || 0) - withdrawAmount).toLocaleString()}</span>
                     </div>
                   </div>
 

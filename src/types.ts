@@ -29,30 +29,29 @@ export interface SavingsGoal {
   targetAmount: number;
   currentAmount: number;
   deadline: string;
-  category: 'travel' | 'emergency' | 'education' | 'home' | 'other';
+  category: string;
   createdAt: string;
 }
 
 export interface Investment {
   id: string;
   userId: string;
+  assetId: string;
   assetName: string;
-  assetSymbol: string;
-  type: 'stock' | 'crypto' | 'bond';
-  shares: number;
-  averagePrice: number;
+  amount: number;
+  purchasePrice: number;
   currentPrice: number;
-  lastUpdated: string;
+  timestamp: string;
 }
 
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'deposit' | 'withdrawal' | 'investment_buy' | 'investment_sell' | 'savings_transfer' | 'interest_payout';
+  type: 'deposit' | 'withdrawal' | 'investment_buy' | 'investment_sell' | 'interest_payout';
   amount: number;
   description: string;
   timestamp: string;
-  status: 'completed' | 'pending' | 'failed';
+  status: 'pending' | 'success' | 'failed';
 }
 
 export interface MarketData {
@@ -61,16 +60,4 @@ export interface MarketData {
   price: number;
   change24h: number;
   type: 'stock' | 'crypto' | 'bond';
-}
-
-export interface BankDetails {
-  id: string;
-  userId: string;
-  bankName: string;
-  accountName: string;
-  accountNumber: string;
-  routingNumber?: string;
-  swiftCode?: string;
-  isDefault: boolean;
-  createdAt: string;
 }
